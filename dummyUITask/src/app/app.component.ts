@@ -14,6 +14,7 @@ export class AppComponent implements OnInit{
   displayedColumns: string[] = [ 'itemName', 'itemSellingPrice', 'itemBuyingPrice', 'itemStatus', 'action'];
   dataSource = [];
   loginForm: any;
+  token:any;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -22,6 +23,7 @@ export class AppComponent implements OnInit{
 
   ngOnInit() {
 
+    this.getToken();
     this.loadData();
     console.log('dataSource: ', this.dataSource);
     this.loginForm = this.formBuilder.group({
@@ -31,6 +33,26 @@ export class AppComponent implements OnInit{
       itemBuyingPrice: [null],
       itemStatus:['available']
     });
+  }
+
+  getHeaders() {
+    return new Headers({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.token}`
+    })
+  }
+
+  getToken()
+  {
+    this.dataSource=[];
+    fetch(`${this.baseURL}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('data get token ', data);
+        this.token = data.data;
+      }, error => {
+        console.log(error);
+      }); 
   }
 
   deleteItem(id: number)
@@ -67,7 +89,7 @@ export class AppComponent implements OnInit{
   loadData()
   {
     this.dataSource=[];
-    fetch(this.baseURL)
+    fetch(`${this.baseURL}`,{ headers: this.getHeaders() })
       .then(response => response.json())
       .then(data => {
         console.log('data ', data);
@@ -92,15 +114,15 @@ export class AppComponent implements OnInit{
   
     //api calls  
     postData(data: any): Observable<any> {
-        return this.http.post(`${this.baseURL}/post`, data)
+        return this.http.post(`${this.baseURL}/post`,{ headers: this.getHeaders() }, data)
     }
 
     editData(data: any): Observable<any> {
-      return this.http.put(`${this.baseURL}/item/${data.itemId}`, data)
+      return this.http.put(`${this.baseURL}/item/${data.itemId}`,{ headers: this.getHeaders() }, data)
     }
 
     deleteData(data: any): Observable<any> {
-      return this.http.delete(`${this.baseURL}/item/${data}`)
+      return this.http.post(`${this.baseURL}/item/${data}`,{ headers: this.getHeaders() })
     }
 
 }
